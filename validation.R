@@ -1,68 +1,59 @@
-source("common.R")
+source('common.R')
 
-trueline <- geom_abline(slope = 1, intercept = 0, linetype = "dashed")
-fitline <- geom_smooth(aes(group = NA), method = "lm", se = FALSE,
-                       linetype = "3111", color = "black")
-                       
+validation <- function(prospect_param, trait, mult = 1) {
+    dat_sub <- dat[!is.na(dat[[trait]])]
+    dat_sub[[trait]] <- dat_sub[[trait]] * 1/mult
+    plt <- ggplot(dat_sub) + 
+        aes_string(x = paste0(prospect_param, ".mu"),
+                   #xmin = paste0(prospect_param, ".q25"),
+                   #xmax = paste0(prospect_param, ".q975"),
+                   y = trait) + 
+        geom_point(size = 1.5) +
+        #geom_errorbarh(size = 0.5, alpha = 0.25) + 
+        geom_abline(slope = 1, intercept = 0, linetype = "dashed") + 
+        geom_smooth(aes(group = NA), method = "lm", se = FALSE, 
+                    linetype = "3111", color = "black")
+    return(plt)
+}
 
 # Chlorophyll
-plt_cab <- ggplot(dat[!is.na(leaf_chlorophyll_total)]) +
-    aes(x = Cab, y = leaf_chlorophyll_total) +
-    geom_point() + 
-    trueline + fitline
+plt_cab <- validation("Cab", "leaf_chlorophyll_total")
 
-png("figures/validation.chlorophyll.species.png")
 plot(plt_cab + aes(color = SubClass))
-dev.off()
+ggsave(file.path(figdir, 'validation.Cab.class.png'))
 
-png("figures/validation.chlorophyll.projsite.png")
 plot(plt_cab + aes(color = interaction(Project, Site)))
-dev.off()
+ggsave(file.path(figdir, 'validation.Cab.project.png'))
 
 # Carotenoids
-plt_car <- ggplot(dat[!is.na(leaf_carotenoid_total)]) +
-    aes(x = Car, y = leaf_carotenoid_total) + 
-    geom_point() + 
-    trueline +
-    fitline + 
-    xlim(0, 60)
+plt_car <- validation("Car", "leaf_carotenoid_total")
 
-png("figures/validation.carotenoid.species.png")
 plot(plt_car + aes(color = SubClass))
-dev.off()
+ggsave(file.path(figdir, 'validation.Car.class.png'))
 
-png("figures/validation.carotenoid.projsite.png")
 plot(plt_car + aes(color = interaction(Project, Site)))
-dev.off()
+ggsave(file.path(figdir, 'validation.Car.project.png'))
 
 # Leaf water content
-plt_cw <- ggplot(dat[!is.na(leaf_water_content)]) + 
-    aes(x = Cw * 10000, y = leaf_water_content) + 
-    geom_point() + 
-    trueline + 
-    fitline + 
-    xlim(0, 1000) + 
-    ylim(0, 500)
+plt_cw <- validation("Cw", "leaf_water_content", 10000) + 
+    xlim(0, 0.06) + 
+    ylim(0, 0.06)
 
-png("figures/validation.water.species.png")
 plot(plt_cw + aes(color = Class))
-dev.off()
+ggsave(file.path(figdir, 'validation.Cw.class.png'))
 
-png("figures/validation.water.project.png")
 plot(plt_cw + aes(color = Project))
-dev.off()
+ggsave(file.path(figdir, 'validation.Cw.project.png'))
 
 # Leaf mass per area
-plt_cm <- ggplot(dat[!is.na(leaf_mass_per_area)]) + 
-    aes(x = Cm * 10000, y = leaf_mass_per_area) + 
-    geom_point() + 
-    trueline + 
-    fitline + 
-    xlim(0, 5000)
+plt_cm <- validation("Cm", "leaf_mass_per_area", 10000) + 
+    xlim(0, 0.015) + 
+    ylim(0, 0.025)
 
-png("figures/validation.lma.species.png")
 plot(plt_cm + aes(color = Class))
-dev.off()
-png("figures/validation.lma.project.png")
+ggsave(file.path(figdir, 'validation.Cm.class.png'))
+
 plot(plt_cm + aes(color = Project))
-dev.off()
+ggsave(file.path(figdir, 'validation.Cm.project.png'))
+
+if (!interactive()) dev.off()
